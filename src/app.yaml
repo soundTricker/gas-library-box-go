@@ -1,0 +1,13 @@
+application: gas-library-box
+version: go-v1
+threadsafe: true
+
+runtime: go
+api_version: go1
+
+handlers:
+- url: /.*
+  script: _go_app
+
+- url: /_ah/spi/.*
+  script: _go_app
