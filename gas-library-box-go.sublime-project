@@ -1,0 +1,15 @@
+{
+    "settings": {
+        "GoSublime": {
+            "env": {
+                "GOPATH": "$HOME/git/gocode:$HOME/git/gas-library-box-go"
+            }
+        }
+    },
+	"folders":
+	[
+		{
+			"path": "/Users/tominaga/git/gas-library-box-go"
+		}
+	]
+}

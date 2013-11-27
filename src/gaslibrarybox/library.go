@@ -1,13 +1,14 @@
-package models
+package gaslibrarybox
 
 import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/memcache"
+
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/crhym3/go-endpoints/endpoints"
+	"github.com/soundTricker/go-endpoints/endpoints"
 	"time"
 )
 
@@ -33,8 +34,7 @@ var (
 	DuplicateEntity = errors.New("Duplicate")
 )
 
-func GetLibrary(c endpoints.Context, key string, l *Library) error {
-
+func GetLibrary(c appengine.Context, key string, l *Library) error {
 	item, err := memcache.Get(c, fmt.Sprintf(libraryMemcacheKey, key))
 
 	switch err {
@@ -61,21 +61,12 @@ func putLibrary2Cache(c appengine.Context, l *Library) {
 	PutEntity2Memcache(c, fmt.Sprintf(libraryMemcacheKey, l.LibraryKey), l)
 }
 
-func PutLibrary(c endpoints.Context, l *Library) error {
+func PutLibrary(c endpoints.Context, m *Member, l *Library) error {
 
-	u, err := GetCurrentUser(c)
-
-	if err == nil {
-		return errors.New("Unauthorized")
-	}
-
-	m := &Member{}
-
-	if err := GetMember(c, u, m); err != nil {
-		if err != datastore.ErrNoSuchEntity {
-			return err
-		}
-	}
+	l.AuthorName = m.Nickname
+	l.AuthorKey, _ = datastore.DecodeKey(m.MemberKey)
+	l.AuthorUrl = m.Url
+	l.AuthorIconUrl = m.UserIconUrl
 
 	if err := GetLibrary(c, l.LibraryKey, &Library{}); err != datastore.ErrNoSuchEntity {
 		return DuplicateEntity
@@ -86,10 +77,11 @@ func PutLibrary(c endpoints.Context, l *Library) error {
 	l.ModifiedAt = time.Now()
 	l.RegisteredAt = time.Now()
 
-	_, err = datastore.Put(c, k, l)
-
-	if err != nil {
+	if _, err := datastore.Put(c, k, l); err != nil {
 		return err
 	}
+
+	putLibrary2Cache(c, l)
+
 	return nil
 }
